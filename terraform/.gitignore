@@ -35,3 +35,7 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+
+#ignore secrets.yaml from database setup.
+../database_cluster/secrets.yaml
