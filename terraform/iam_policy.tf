@@ -23,3 +23,9 @@ resource "aws_iam_policy" "external_dns" {
     ]
   })
 }
+
+# Attach ELB policy to node group for LoadBalancer creation
+resource "aws_iam_role_policy_attachment" "node_group_elb_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/ElasticLoadBalancingFullAccess"
+  role       = module.eks.eks_managed_node_groups.learner_ng.iam_role_name
+}

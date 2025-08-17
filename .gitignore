@@ -1,0 +1,8 @@
+# Ignore secrets files
+database_cluster/secrets.yaml
+
+# Terraform files
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
