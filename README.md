@@ -1,2 +1,9 @@
 # group3-sre
-Final project for group 3 of SCTP-NTU Cohort 10 for Cloud Infrastructure and Engineering
+
+## Introduction
+
+This repo is used host the code for final project of group 3.
+
+## Usage
+
+Fork the repoitory, run setup-observability.sh in to automate the provisioning of VPC, EKS cluster, monitoring setup.
