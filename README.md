@@ -7,6 +7,21 @@ This repo is used host the code for final project of group 3.
 
 ## Usage
 
+Before running this project, make sure you create a yaml file called secrets.yaml in database_cluster folder. This yaml should should contain the credential to access database.
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-credentials
+  namespace: database-cluster
+type: Opaque
+data:
+  mysql-root-password:   # replace with your rootpassword
+  mysql-password:   # replace with wpuser password
+  mysql-replication-password:   # replace with database replicating  key
+```
+
 Fork the repoitory, run setup-observability.sh in to automate the provisioning of VPC, EKS cluster, monitoring setup.
 
 The setup-observability.sh script is a complete infrastructure setup that includes:
