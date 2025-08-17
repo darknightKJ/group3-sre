@@ -1,4 +1,5 @@
-# group3-sre
+
+# SCTP-NTU Cohort10 Group3 SRE Project
 
 ## Introduction
 
@@ -10,11 +11,11 @@ Fork the repoitory, run setup-observability.sh in to automate the provisioning o
 
 The setup-observability.sh script is a complete infrastructure setup that includes:
 
--Phase 1: Terraform infrastructure
--Phase 2: Prometheus monitoring stack + Discord alerts
--Phase 3: MySQL HA database cluster (with replication)
--Phase 4: WordPress Application Setup (LoadBalancer service)
--Phase 5: Port forwarding for UI access
+- Phase 1: Terraform infrastructure
+- Phase 2: Prometheus monitoring stack + Discord alerts
+- Phase 3: MySQL HA database cluster (with replication)
+- Phase 4: WordPress Application Setup (LoadBalancer service)
+- Phase 5: Port forwarding for UI access
 
 This provides end-to-end setup from infrastructure to applications in one script. The MySQL installation includes proper secret management and HA configuration.
 
