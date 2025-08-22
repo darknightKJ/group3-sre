@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: snake-frontend
+  template:
+    metadata:
+      labels:
+        app: snake-frontend
+    spec:
+      containers:
+        - name: snake-frontend
+          image: hannamatheos/snake-frontend:latest # <--- your Docker Hub image
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake-frontend-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: snake-frontend
+  ports:
+    - port: 80
+      targetPort: 80
