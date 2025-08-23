@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-metrics
+  labels:
+    app: wordpress
+    monitoring: enabled
+spec:
+  ports:
+    - port: 9117
+      targetPort: 9117
+      name: metrics
+  selector:
+    app: wordpress
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: wordpress-monitor
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      monitoring: enabled
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics

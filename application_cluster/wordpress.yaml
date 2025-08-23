@@ -37,11 +37,52 @@ spec:
             - name: WORDPRESS_DB_HOST
               value: my-release-mysql-primary.database-cluster.svc.cluster.local
             - name: WORDPRESS_DB_PASSWORD
-              value: wppassword
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql-password
             - name: WORDPRESS_DB_USER
-              value: wpuser
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-credentials
+                  key: mysql-username
             - name: WORDPRESS_DB_NAME
               value: wordpress
           ports:
             - containerPort: 80
               name: wordpress
+          volumeMounts:
+            - name: apache-logs
+              mountPath: /var/log/apache2
+        # Promtail sidecar for log collection
+        - image: grafana/promtail:2.9.0
+          name: promtail
+          args:
+            - -config.file=/etc/promtail/config.yml
+          ports:
+            - containerPort: 9080
+              name: http-metrics
+          volumeMounts:
+            - name: apache-logs
+              mountPath: /var/log/apache2
+              readOnly: true
+            - name: promtail-config
+              mountPath: /etc/promtail
+        # Apache metrics exporter sidecar
+        - image: lusotycoon/apache-exporter:v0.11.0
+          name: metrics-exporter
+          args:
+            - --scrape_uri=http://localhost/server-status?auto
+          ports:
+            - containerPort: 9117
+              name: metrics
+          volumeMounts:
+            - name: apache-logs
+              mountPath: /var/log/apache2
+              readOnly: true
+      volumes:
+        - name: apache-logs
+          emptyDir: {}
+        - name: promtail-config
+          configMap:
+            name: promtail-config
