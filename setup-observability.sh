@@ -11,6 +11,12 @@ cd ~/group3-sre/monitoring_cluster
 # Update kubeconfig
 aws eks update-kubeconfig --name group3-cluster --region ap-southeast-1
 
+# Install EBS CSI driver addon early (required for PVCs)
+echo "💾 Installing EBS CSI driver..."
+aws eks create-addon --cluster-name group3-cluster --addon-name aws-ebs-csi-driver --region ap-southeast-1 2>/dev/null || echo "EBS CSI driver already exists"
+echo "⏳ Waiting for EBS CSI driver to be ready..."
+sleep 30  # Give it time to install
+
 # Install OpenLens service account
 echo "💬 Adding OpenLens access..."
 kubectl apply -f ~/group3-sre/monitoring_cluster/openlens.yaml
@@ -38,12 +44,43 @@ kubectl --namespace kube-prometheus-stack get secrets kube-prometheus-stack-graf
 echo "💬 Installing Discord Bridge..."
 kubectl apply -f ~/group3-sre/monitoring_cluster/discord-bridge.yaml
 
+# Install Loki for log aggregation
+echo "📜 Installing Loki stack..."
+helm repo add grafana https://grafana.github.io/helm-charts 2>/dev/null || true
+helm repo update
+helm upgrade --install loki \
+  --namespace kube-prometheus-stack \
+  -f ~/group3-sre/monitoring_cluster/loki-stack.yaml \
+  grafana/loki-stack
+
+# Wait for Loki to be ready
+echo "⏳ Waiting for Loki to be ready..."
+kubectl wait --for=condition=ready pod -l app=loki -n kube-prometheus-stack --timeout=300s
+
+echo "✅ Loki installation completed!"
+echo "📜 Loki URL for Grafana data source: http://loki:3100"
+echo "📄 Add this as a Loki data source in Grafana to view logs"
+
+# Fix Grafana data source conflicts by reinstalling Loki without auto-provisioning
+echo "🔧 Reinstalling Loki without Grafana auto-provisioning..."
+helm uninstall loki -n kube-prometheus-stack 2>/dev/null || true
+sleep 5
+helm install loki \
+  --namespace kube-prometheus-stack \
+  -f ~/group3-sre/monitoring_cluster/loki-stack.yaml \
+  grafana/loki-stack
+
+# Wait for Loki to be ready again
+echo "⏳ Waiting for Loki to be ready..."
+kubectl wait --for=condition=ready pod -l app=loki -n kube-prometheus-stack --timeout=300s
+
+# Restart Grafana to clear any cached configs
+kubectl delete pod -n kube-prometheus-stack -l app.kubernetes.io/name=grafana
+echo "⏳ Waiting for Grafana to restart..."
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=grafana -n kube-prometheus-stack --timeout=120s
+
 # Phase 3: Database Setup
 echo "🗄️ Installing MySQL HA Database Cluster..."
-
-# Install EBS CSI driver addon (if not already done)
-echo "💾 Installing EBS CSI driver..."
-aws eks create-addon --cluster-name group3-cluster --addon-name aws-ebs-csi-driver --region ap-southeast-1 2>/dev/null || true
 
 # Apply StorageClass
 echo "💾 Creating StorageClass..."
@@ -80,9 +117,12 @@ echo "🔍 Installing WordPress Application..."
 echo "📦 Creating application namespace..."
 kubectl create namespace application-cluster --dry-run=client -o yaml | kubectl apply -f -
 
-# Deploy WordPress
-echo "🔍 Deploying WordPress..."
+# Deploy WordPress with monitoring and logging
+echo "🔍 Deploying WordPress with sidecar monitoring and logging..."
+kubectl apply -f ~/group3-sre/application_cluster/wordpress-secrets.yaml -n application-cluster
+kubectl apply -f ~/group3-sre/application_cluster/promtail-config.yaml -n application-cluster
 kubectl apply -f ~/group3-sre/application_cluster/wordpress.yaml -n application-cluster
+kubectl apply -f ~/group3-sre/application_cluster/wordpress-monitoring.yaml -n application-cluster
 
 # Wait for WordPress pods to be ready
 echo "⏳ Waiting for WordPress pods to be ready..."
@@ -117,4 +157,16 @@ echo "🚨 Alertmanager UI: http://localhost:8082"
 kubectl --namespace kube-prometheus-stack port-forward svc/kube-prometheus-stack-alertmanager 8082:9093 &
 
 echo "✅ All services are now accessible via port forwarding!"
+echo ""
+echo "=== Grafana Data Sources ==="
+echo "📈 Prometheus: http://kube-prometheus-stack-prometheus:9090 (auto-configured)"
+echo "📜 Loki: http://loki.kube-prometheus-stack.svc.cluster.local:3100 (add manually)"
+echo ""
+echo "=== Manual Setup Required ==="
+echo "1. Go to Grafana UI: http://localhost:8080"
+echo "2. Configuration → Data Sources → Add data source → Loki"
+echo "3. URL: http://loki.kube-prometheus-stack.svc.cluster.local:3100"
+echo "4. Leave 'Default' unchecked (Prometheus is already default)"
+echo "5. Save & Test"
+echo ""
 echo "Press Ctrl+C to stop all port forwards"

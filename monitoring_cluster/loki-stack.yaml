@@ -1,0 +1,41 @@
+loki:
+  enabled: true
+  persistence:
+    enabled: false  # Disable local storage
+  loki:
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+    ingester:
+      lifecycler:
+        address: 127.0.0.1
+        ring:
+          kvstore:
+            store: inmemory
+          replication_factor: 1
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: s3
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+    storage_config:
+      aws:
+        s3: s3://ap-southeast-1/loki-logs-group3
+        region: ap-southeast-1
+      boltdb_shipper:
+        active_index_directory: /loki/boltdb-shipper-active
+        cache_location: /loki/boltdb-shipper-cache
+        shared_store: s3
+
+grafana:
+  enabled: false  # Use existing Grafana
+  sidecar:
+    datasources:
+      enabled: false  # Disable auto data source creation
+
+promtail:
+  enabled: false  # Use sidecar instead

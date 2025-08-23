@@ -4,6 +4,7 @@ resource "aws_eks_access_entry" "team_members" {
     "arn:aws:iam::255945442255:user/kevinczkm",
     "arn:aws:iam::255945442255:user/wcywong",
     "arn:aws:iam::255945442255:user/krisbianto",
+    "arn:aws:iam::255945442255:user/hanna-ce10",
   ])
 
   cluster_name  = module.eks.cluster_name
@@ -17,6 +18,7 @@ resource "aws_eks_access_policy_association" "team_admin_policy" {
     "arn:aws:iam::255945442255:user/kevinczkm",
     "arn:aws:iam::255945442255:user/wcywong",
     "arn:aws:iam::255945442255:user/krisbianto",
+    
   ])
 
   cluster_name  = module.eks.cluster_name
