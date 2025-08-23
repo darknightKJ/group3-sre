@@ -16,6 +16,13 @@ alertmanager:
           - url: http://alertmanager-discord.kube-prometheus-stack:9094
             send_resolved: true
 
+# Disable control plane alerts for EKS to reduce false positives.
+# AWS manages the control plane components and doesn't expose their metrics endpoints to users.
+defaultRules:
+  rules:
+    kubeControllerManager: false
+    kubeScheduler: false
+
 prometheus:
   prometheusSpec:
     additionalPrometheusRulesMap:

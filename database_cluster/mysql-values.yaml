@@ -12,12 +12,14 @@ primary:
   persistence:
     enabled: true
     size: 8Gi
+    storageClass: gp2
 
 secondary:
   replicaCount: 2
   persistence:
     enabled: true
     size: 8Gi
+    storageClass: gp2
 
 metrics:
   enabled: true
